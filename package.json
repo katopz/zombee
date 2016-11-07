@@ -4,20 +4,28 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "isomorphic-fetch": "^2.2.1",
-    "microtime": "^2.1.1"
+    "isomorphic-fetch": "^2.2.1"
   },
+  "keywords": [
+    "zombee",
+    "interval",
+    "cron",
+    "job"
+  ],
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.2",
     "babel-eslint": "^7.1.0",
     "babel-preset-es2015": "^6.18.0",
     "babel-preset-stage-3": "^6.17.0",
+    "chai": "^3.5.0",
     "eslint": "^3.9.1",
     "eslint-plugin-babel": "^3.3.0",
     "mkdirp": "^0.5.1",
+    "mocha": "^3.1.2",
     "nodemon": "^1.11.0",
-    "rimraf": "^2.5.4"
+    "rimraf": "^2.5.4",
+    "webpack": "^1.13.3"
   },
   "babel": {
     "presets": [
@@ -27,13 +35,20 @@
     "sourceMaps": true,
     "retainLines": true
   },
+  "env": {
+    "mocha": true,
+    "node": true
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "babel-node index.js",
-    "build-start": "npm run build && node ./build/index.js",
-    "start": "node index.js",
-    "clean": "rimraf build && mkdirp build",
-    "build": "npm run clean && babel -d build ./index.js -s"
+    "clean": "rimraf lib dist",
+    "build": "babel src --out-dir lib",
+    "build:umd": "webpack src/index.js dist/zombee.js && NODE_ENV=production webpack src/index.js dist/zombee.min.js",
+    "lint": "eslint src test",
+    "test": "npm run lint && npm run testonly",
+    "testonly": "NODE_ENV=test mocha --compilers js:babel-core/register --recursive",
+    "test:watch": "NODE_ENV=test mocha --compilers js:babel-core/register --recursive --watch",
+    "prepublish": "npm run lint && npm run test && npm run clean && npm run build && npm run build:umd"
   },
   "author": "katopz",
   "license": "MIT"

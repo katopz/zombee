@@ -1,5 +1,4 @@
 import fs from 'fs'
-import path from 'path'
 
 // Private
 const INFO = '*'
@@ -7,7 +6,7 @@ const WARNING = '#'
 const ERROR = '!'
 
 // Default
-export const defaultOptions = {
+export const defaultOption = {
   folder: 'logs',
   name: 'zombee_',
   ext: 'log'
@@ -30,12 +29,12 @@ const _print = (type, raw) => {
     const at = new Date()
 
     // Not config yet?
-    if (!log.options || (_getCurrentYMD() !== log.options.stamp)) {
-      log.config(log.options || defaultOptions)
+    if (!log.option || (_getCurrentYMD() !== log.option.stamp)) {
+      log.config(log.option || defaultOption)
     }
 
     // Log
-    log.options.console && log.options.console.log([
+    log.option.console && log.option.console.log([
       process.pid,
       +at,
       at.toUTCString(),
@@ -43,22 +42,22 @@ const _print = (type, raw) => {
       text
     ].join(' | '))
   } catch (err) {
-    console.error(err)
+    console.error(err) // eslint-disable-line
   }
 }
 
 export default class log {
-  static config(customOptions) {
+  static config(customOption) {
     try {
 
-      // Options
-      log.options = Object.assign({}, defaultOptions, customOptions)
+      // Option
+      log.option = Object.assign({}, defaultOption, customOption)
 
       // Cursor
-      log.options.stamp = _getCurrentYMD()
+      log.option.stamp = _getCurrentYMD()
 
       // Writer
-      const { folder, name, ext, stamp } = log.options
+      const { folder, name, ext, stamp } = log.option
 
       // Filter bad path
       if (!_isAllowedPath(folder) || !_isAllowedPath(name)) {
@@ -70,12 +69,12 @@ export default class log {
 
       // Output
       const output = fs.createWriteStream(`${folder}/${name}${stamp}.${ext}`, { flags: 'a' })
-      log.options.output = output
+      log.option.output = output
 
       // Console -> Output
-      log.options.console = new console.Console(output, output)
+      log.option.console = new console.Console(output, output) // eslint-disable-line
     } catch (err) {
-      console.error(err)
+      console.error(err) // eslint-disable-line
     }
 
     return log
@@ -97,7 +96,7 @@ export default class log {
   }
 
   static dispose() {
-    delete log.options
+    delete log.option
     return log
   }
 }
