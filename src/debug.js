@@ -2,7 +2,7 @@ import fs from 'fs'
 
 // Private
 const INFO = '*'
-const WARNING = '#'
+const WARN = '#'
 const ERROR = '!'
 
 // Default
@@ -29,12 +29,12 @@ const _print = (type, raw) => {
     const at = new Date()
 
     // Not config yet?
-    if (!log.option || (_getCurrentYMD() !== log.option.stamp)) {
-      log.config(log.option || defaultOption)
+    if (!debug.option || (_getCurrentYMD() !== debug.option.stamp)) {
+      debug.config(debug.option || defaultOption)
     }
 
-    // Log
-    log.option.console && log.option.console.log([
+    // debug
+    debug.option.console && debug.option.console.log([
       process.pid,
       +at,
       at.toUTCString(),
@@ -44,20 +44,22 @@ const _print = (type, raw) => {
   } catch (err) {
     console.error(err) // eslint-disable-line
   }
+
+  return debug;
 }
 
-export default class log {
+export default class debug {
   static config(customOption) {
     try {
 
       // Option
-      log.option = Object.assign({}, defaultOption, customOption)
+      debug.option = Object.assign({}, defaultOption, customOption)
 
       // Cursor
-      log.option.stamp = _getCurrentYMD()
+      debug.option.stamp = _getCurrentYMD()
 
       // Writer
-      const { folder, name, ext, stamp } = log.option
+      const { folder, name, ext, stamp } = debug.option
 
       // Filter bad path
       if (!_isAllowedPath(folder) || !_isAllowedPath(name)) {
@@ -69,34 +71,35 @@ export default class log {
 
       // Output
       const output = fs.createWriteStream(`${folder}/${name}${stamp}.${ext}`, { flags: 'a' })
-      log.option.output = output
+      debug.option.output = output
 
       // Console -> Output
-      log.option.console = new console.Console(output, output) // eslint-disable-line
+      debug.option.console = new console.Console(output, output) // eslint-disable-line
     } catch (err) {
       console.error(err) // eslint-disable-line
     }
 
-    return log
+    return debug
+  }
+
+  static debug(raw) {
+    return _print('', raw)
   }
 
   static info(raw) {
-    _print(INFO, raw)
-    return log
+    return _print(INFO, raw)
   }
 
-  static warning(raw) {
-    _print(WARNING, raw)
-    return log
+  static warn(raw) {
+    return _print(WARN, raw)
   }
 
   static error(raw) {
-    _print(ERROR, raw)
-    return log
+    return _print(ERROR, raw)
   }
 
   static dispose() {
-    delete log.option
-    return log
+    delete debug.option
+    return debug
   }
 }
