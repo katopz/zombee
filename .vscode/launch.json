@@ -24,6 +24,27 @@
             },
             "console": "internalConsole",
             "sourceMaps": true
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program (Windows)",
+            "program": "${workspaceRoot}/examples/index.js",
+            "cwd": "${workspaceRoot}",
+            "outFiles": [],
+            "args": [
+                "--watch",
+                "api",
+                "--exec",
+                "${workspaceRoot}/node_modules/.bin/babel-node.cmd"
+            ],
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/nodemon.cmd",
+            "runtimeArgs": [],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "console": "internalConsole",
+            "sourceMaps": true
         }, 
         {
             "type": "node",
