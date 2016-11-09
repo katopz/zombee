@@ -1,15 +1,17 @@
 import fs from 'fs'
 
-// Private
-const INFO = '*'
-const WARN = '#'
-const ERROR = '!'
+// Type
+export const INFO = '#'
+export const DEBUG = '^'
+export const WARN = '!'
+export const ERROR = '*'
 
 // Default
 export const defaultOption = {
   folder: 'logs',
   name: 'zombee_',
-  ext: 'log'
+  ext: 'log',
+  ignores: [] // [INFO, DEBUG, WARN, ERROR]
 }
 
 // Allow only word
@@ -24,14 +26,20 @@ const _getCurrentYMD = () => new Date().toISOString().split('T')[0]
 // Do print to console
 const _print = (type, raw) => {
   try {
-    // Input
-    const text = (raw instanceof String) ? raw : JSON.stringify(raw)
-    const at = new Date()
-
     // Not config yet?
     if (!debug.option || (_getCurrentYMD() !== debug.option.stamp)) {
       debug.config(debug.option || defaultOption)
     }
+
+    // Ignore?
+    if(debug.option.ignores && debug.option.ignores.includes(type))
+    {
+      return;
+    }
+
+    // Input
+    const text = (raw.constructor === String) ? raw : JSON.stringify(raw)
+    const at = new Date()
 
     // debug
     debug.option.console && debug.option.console.log([
@@ -51,7 +59,6 @@ const _print = (type, raw) => {
 export default class debug {
   static config(customOption) {
     try {
-
       // Option
       debug.option = Object.assign({}, defaultOption, customOption)
 
@@ -83,7 +90,7 @@ export default class debug {
   }
 
   static debug(raw) {
-    return _print('', raw)
+    return _print(DEBUG, raw)
   }
 
   static info(raw) {

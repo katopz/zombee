@@ -23,8 +23,14 @@
 - [x] Expect fetch done as interval set.
 - [x] Expect fetch response to be same URI.
 
+### Features v1.0.0
+- [ ] Add browser log support.
+- [ ] Add browser log persistance support.
+- [ ] Add browser unit test.
+
 ### Finalize
-- [ ] Remove unused module
-- [x] Add linter
-- [ ] Add distribute
-- [ ] Distribute npm
+- [ ] Remove unused module.
+- [ ] Fresh install test.
+- [x] Add linter.
+- [ ] Add distribute.
+- [ ] Distribute npm.
