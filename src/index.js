@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import fetch from './fetch';
-import debug from './debug'
+import flog from './flog'
 
 export default class Zombee extends EventEmitter {
 
@@ -38,11 +38,19 @@ export default class Zombee extends EventEmitter {
     return this;
   }
 
+  dispose() {
+    try {
+      this.stop()
+    } catch (err) {
+      console.error(err) // eslint-disable-line
+    }
+  }
+
   _fetch(uri) {
     try {
       if (!uri) {
         const err = new Error('Required uri.')
-        debug.error(err);
+        flog.error(err);
         this.emit('error', err)
         return this;
       }
@@ -52,30 +60,29 @@ export default class Zombee extends EventEmitter {
       const begin = now()
 
       // Job
-      fetch(uri)
-        .then(response => {
-          // Perf
-          const end = now()
-          debug.info({
-            begin,
-            end,
-            latency: end - begin,
-            status: response.status,
-          })
+      fetch(uri).then(response => {
+        // Perf
+        const end = now()
+        flog.info({
+          begin,
+          end,
+          latency: end - begin,
+          status: response.status,
+        })
 
-          // failure
-          if (response.status >= 400) {
-            debug.error(response.statusText)
-            this.emit('failed', response)
-          }
+        // failure
+        if (response.status >= 400) {
+          flog.error(response.statusText)
+          this.emit('failed', response)
+        }
 
-          // succeed
-          this.emit('succeed', response)
-        }).catch(err => {
-          // error
-          debug.error(err);
-          this.emit('error', err)
-        });
+        // succeed
+        this.emit('succeed', response)
+      }).catch(err => {
+        // error
+        flog.error(err);
+        this.emit('error', err)
+      });
     } catch (err) {
       console.error(err) // eslint-disable-line
     }
@@ -104,17 +111,7 @@ export default class Zombee extends EventEmitter {
   _watchForExit() {
     // Graceful Shutdown
     process.on('SIGTERM', () => {
-      try {
-        // self
-        this.dispose()
-
-        // log
-        debug.info('EXIT')
-        debug.dispose()
-      } catch (err) {
-        console.error(err) // eslint-disable-line
-      }
-
+      this.dispose()
       process.exit(0)
     })
 

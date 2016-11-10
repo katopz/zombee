@@ -1,8 +1,9 @@
 import fs from 'fs'
 
 // Type
+export const LOG = '-'
 export const INFO = '#'
-export const DEBUG = '^'
+export const DEBUG = '@'
 export const WARN = '!'
 export const ERROR = '*'
 
@@ -11,7 +12,8 @@ export const defaultOption = {
   folder: 'logs',
   name: 'zombee_',
   ext: 'log',
-  ignores: [] // [INFO, DEBUG, WARN, ERROR]
+  ignores: [], // [INFO, DEBUG, WARN, ERROR],
+  tags: 'ANY'
 }
 
 // Allow only word
@@ -27,46 +29,50 @@ const _getCurrentYMD = () => new Date().toISOString().split('T')[0]
 const _print = (type, raw) => {
   try {
     // Not config yet?
-    if (!debug.option || (_getCurrentYMD() !== debug.option.stamp)) {
-      debug.config(debug.option || defaultOption)
+    if (!flog.option || (_getCurrentYMD() !== flog.option.stamp)) {
+      flog.config(flog.option || defaultOption)
     }
 
     // Ignore?
-    if(debug.option.ignores && debug.option.ignores.includes(type))
-    {
+    if (flog.option.ignores && flog.option.ignores.includes(type)) {
       return;
     }
 
     // Input
     const text = (raw.constructor === String) ? raw : JSON.stringify(raw)
     const at = new Date()
+    const tags = flog.option.tags
 
-    // debug
-    debug.option.console && debug.option.console.log([
+    // flog
+    flog.option.console && flog.option.console.log([
       process.pid,
       +at,
       at.toUTCString(),
       type,
+      tags,
       text
     ].join(' | '))
   } catch (err) {
     console.error(err) // eslint-disable-line
   }
 
-  return debug;
+  return flog;
 }
 
-export default class debug {
+export default class flog {
   static config(customOption) {
     try {
+      // Will graceful shutdown.
+      this._watchForExit()
+
       // Option
-      debug.option = Object.assign({}, defaultOption, customOption)
+      flog.option = Object.assign({}, defaultOption, customOption)
 
       // Cursor
-      debug.option.stamp = _getCurrentYMD()
+      flog.option.stamp = _getCurrentYMD()
 
       // Writer
-      const { folder, name, ext, stamp } = debug.option
+      const { folder, name, ext, stamp } = flog.option
 
       // Filter bad path
       if (!_isAllowedPath(folder) || !_isAllowedPath(name)) {
@@ -78,19 +84,19 @@ export default class debug {
 
       // Output
       const output = fs.createWriteStream(`${folder}/${name}${stamp}.${ext}`, { flags: 'a' })
-      debug.option.output = output
+      flog.option.output = output
 
       // Console -> Output
-      debug.option.console = new console.Console(output, output) // eslint-disable-line
+      flog.option.console = new console.Console(output, output) // eslint-disable-line
     } catch (err) {
       console.error(err) // eslint-disable-line
     }
 
-    return debug
+    return flog
   }
 
-  static debug(raw) {
-    return _print(DEBUG, raw)
+  static log(raw) {
+    return _print(LOG, raw)
   }
 
   static info(raw) {
@@ -105,8 +111,44 @@ export default class debug {
     return _print(ERROR, raw)
   }
 
+  static debug(raw) {
+    return _print(DEBUG, raw)
+  }
+
+  static tags(value) {
+    if (!flog.option) {
+      flog.config()
+    }
+
+    flog.option.tags = value
+
+    return flog
+  }
+
+  static catch() {
+    process.on('uncaughtException', (err) => _print(ERROR, err));
+    return flog
+  }
+
   static dispose() {
-    delete debug.option
-    return debug
+    flog.option && flog.option.output && flog.option.output.end();
+    delete flog.option
+    return flog
+  }
+
+  static _watchForExit() {
+    // DRY
+    if (flog.isWatchedForExit) {
+      return
+    }
+
+    flog.isWatchedForExit = true
+
+    // Graceful Shutdown
+    process.on('SIGTERM', () => {
+      flog.isWatchedForExit = false;
+      flog.dispose()
+      process.exit(0)
+    })
   }
 }

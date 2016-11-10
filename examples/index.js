@@ -1,9 +1,10 @@
 import Zombee from '../src';
-import debug from '../src/debug';
+import flog from '../src/flog';
 
-debug.debug('Test debug');
-debug.info('Test info');
-debug.warn('Test warn');
-debug.error('Test error');
+flog.tags('foo')
+flog.debug('Test debug');
+flog.info('Test info');
+flog.warn('Test warn');
+flog.error('Test error');
 
 new Zombee().harvest('https://raw.githubusercontent.com/katopz/zombee/master/README.md')

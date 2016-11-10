@@ -12,7 +12,7 @@ describe('Zombee', () => {
     assert.typeOf(zombee, 'object')
   })
 
-  it('can harvest once', () => new Promise((resolve, reject) => {
+  it('can harvest once', () => new Promise((resolve) => {
     const zombee = new Zombee()
     zombee.harvest(TEST_URI)
     zombee.on('succeed', (response) => {
@@ -21,7 +21,7 @@ describe('Zombee', () => {
     })
   }))
 
-  it('can harvest once, 1 sec later', () => new Promise((resolve, reject) => {
+  it('can harvest once, 1 sec later', () => new Promise((resolve) => {
     const _timeout = setTimeout(() => { throw new Error('Something wrong') }, 2000)
     const zombee = new Zombee()
     zombee.harvest(TEST_URI, 1000)
