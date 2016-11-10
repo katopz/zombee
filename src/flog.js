@@ -35,7 +35,7 @@ const _print = (type, raw) => {
 
     // Ignore?
     if (flog.option.ignores && flog.option.ignores.includes(type)) {
-      return;
+      return
     }
 
     // Input
@@ -47,7 +47,7 @@ const _print = (type, raw) => {
     flog.option.console && flog.option.console.log([
       process.pid,
       +at,
-      at.toUTCString(),
+      at.toISOString(),
       type,
       tags,
       text
@@ -56,15 +56,14 @@ const _print = (type, raw) => {
     console.error(err) // eslint-disable-line
   }
 
-  return flog;
+  return flog
 }
+
+let _times = new Map()
 
 export default class flog {
   static config(customOption) {
     try {
-      // Will graceful shutdown.
-      this._watchForExit()
-
       // Option
       flog.option = Object.assign({}, defaultOption, customOption)
 
@@ -125,18 +124,37 @@ export default class flog {
     return flog
   }
 
+  static begin(label) {
+    _times.set(label, +new Date())
+    return flog
+  }
+
+  static end(label) {
+    const begin = _times.get(label)
+    if (!begin) {
+      process.emitWarning(`No such label '${label}' for flog.end(...)`)
+      return
+    }
+
+    const end = +new Date()
+    const time = end - begin
+    _times.delete(label)
+    return { begin, end, time }
+  }
+
   static catch() {
-    process.on('uncaughtException', (err) => _print(ERROR, err));
+    process.on('uncaughtException', (err) => _print(ERROR, err))
     return flog
   }
 
   static dispose() {
-    flog.option && flog.option.output && flog.option.output.end();
+    flog.option && flog.option.output && flog.option.output.end()
     delete flog.option
     return flog
   }
 
-  static _watchForExit() {
+  // TODO : use instance
+  _watchForExit() {
     // DRY
     if (flog.isWatchedForExit) {
       return
@@ -146,7 +164,7 @@ export default class flog {
 
     // Graceful Shutdown
     process.on('SIGTERM', () => {
-      flog.isWatchedForExit = false;
+      flog.isWatchedForExit = false
       flog.dispose()
       process.exit(0)
     })
