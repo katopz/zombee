@@ -10,7 +10,7 @@ export const ERROR = '*'
 // Default
 export const defaultOption = {
   folder: 'logs',
-  name: 'zombee_',
+  name: '',
   ext: 'log',
   ignores: [], // [INFO, DEBUG, WARN, ERROR],
   tags: 'ANY'
@@ -29,22 +29,22 @@ const _getCurrentYMD = () => new Date().toISOString().split('T')[0]
 const _print = (type, raw) => {
   try {
     // Not config yet?
-    if (!flog.option || (_getCurrentYMD() !== flog.option.stamp)) {
-      flog.config(flog.option || defaultOption)
+    if (!firelog.option || (_getCurrentYMD() !== firelog.option.stamp)) {
+      firelog.config(firelog.option || defaultOption)
     }
 
     // Ignore?
-    if (flog.option.ignores && flog.option.ignores.includes(type)) {
+    if (firelog.option.ignores && firelog.option.ignores.includes(type)) {
       return
     }
 
     // Input
     const text = (raw.constructor === String) ? raw : JSON.stringify(raw)
     const at = new Date()
-    const tags = flog.option.tags
+    const tags = firelog.option.tags
 
-    // flog
-    flog.option.console && flog.option.console.log([
+    // firelog
+    firelog.option.console && firelog.option.console.log([
       process.pid,
       +at,
       at.toISOString(),
@@ -56,22 +56,22 @@ const _print = (type, raw) => {
     console.error(err) // eslint-disable-line
   }
 
-  return flog
+  return firelog
 }
 
 let _times = new Map()
 
-export default class flog {
+export default class firelog {
   static config(customOption) {
     try {
       // Option
-      flog.option = Object.assign({}, defaultOption, customOption)
+      firelog.option = Object.assign({}, defaultOption, customOption)
 
       // Cursor
-      flog.option.stamp = _getCurrentYMD()
+      firelog.option.stamp = _getCurrentYMD()
 
       // Writer
-      const { folder, name, ext, stamp } = flog.option
+      const { folder, name, ext, stamp } = firelog.option
 
       // Filter bad path
       if (!_isAllowedPath(folder) || !_isAllowedPath(name)) {
@@ -83,15 +83,15 @@ export default class flog {
 
       // Output
       const output = fs.createWriteStream(`${folder}/${name}${stamp}.${ext}`, { flags: 'a' })
-      flog.option.output = output
+      firelog.option.output = output
 
       // Console -> Output
-      flog.option.console = new console.Console(output, output) // eslint-disable-line
+      firelog.option.console = new console.Console(output, output) // eslint-disable-line
     } catch (err) {
       console.error(err) // eslint-disable-line
     }
 
-    return flog
+    return firelog
   }
 
   static log(raw) {
@@ -115,24 +115,24 @@ export default class flog {
   }
 
   static tags(value) {
-    if (!flog.option) {
-      flog.config()
+    if (!firelog.option) {
+      firelog.config()
     }
 
-    flog.option.tags = value
+    firelog.option.tags = value
 
-    return flog
+    return firelog
   }
 
   static begin(label) {
     _times.set(label, +new Date())
-    return flog
+    return firelog
   }
 
   static end(label) {
     const begin = _times.get(label)
     if (!begin) {
-      process.emitWarning(`No such label '${label}' for flog.end(...)`)
+      process.emitWarning(`No such label '${label}' for firelog.end(...)`)
       return
     }
 
@@ -144,28 +144,28 @@ export default class flog {
 
   static catch() {
     process.on('uncaughtException', (err) => _print(ERROR, err))
-    return flog
+    return firelog
   }
 
   static dispose() {
-    flog.option && flog.option.output && flog.option.output.end()
-    delete flog.option
-    return flog
+    firelog.option && firelog.option.output && firelog.option.output.end()
+    delete firelog.option
+    return firelog
   }
 
   // TODO : use instance
   _watchForExit() {
     // DRY
-    if (flog.isWatchedForExit) {
+    if (firelog.isWatchedForExit) {
       return
     }
 
-    flog.isWatchedForExit = true
+    firelog.isWatchedForExit = true
 
     // Graceful Shutdown
     process.on('SIGTERM', () => {
-      flog.isWatchedForExit = false
-      flog.dispose()
+      firelog.isWatchedForExit = false
+      firelog.dispose()
       process.exit(0)
     })
   }

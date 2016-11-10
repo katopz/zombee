@@ -1,22 +1,19 @@
 import Zombee from '../src';
-import flog from '../src/flog';
+import firelog from '../src/firelog';
 
-flog.tags('foo')
-flog.debug('Test debug');
-flog.info('Test info');
-flog.warn('Test warn');
-flog.error('Test error');
+firelog.tags('foo')
+firelog.debug('Test debug');
+firelog.info('Test info');
+firelog.warn('Test warn');
+firelog.error('Test error');
 
 const uri = 'https://raw.githubusercontent.com/katopz/zombee/master/README.md'
 new Zombee()
-  .on(Zombee.FETCH, flog.begin)
-  .on(Zombee.ERROR, flog.error)
-  .on(Zombee.FAILED, flog.warn)
-  .on(Zombee.SUCCEED, (response) => {
-    flog.info(Object.assign({},
-      flog.end(uri),
-      { status: response.status }
-    ))
-  })
+  .on(Zombee.FETCH, firelog.begin)
+  .on(Zombee.ERROR, firelog.error)
+  .on(Zombee.FAILED, firelog.warn)
+  .on(Zombee.SUCCEED, (response) => firelog.log(
+    Object.assign({}, firelog.end(uri), { status: response.status })
+  ))
   .every(3 * Zombee.SEC)
   .harvest(uri)
