@@ -43,7 +43,7 @@ export default class Zombee {
   }
 
   // actions
-  harvest(uri) {
+  harvest(uri, option) {
     if (!uri) {
       return this;
     }
@@ -52,9 +52,9 @@ export default class Zombee {
       // Do once
       const __interval = this._interval
       delete this._interval
-      this._repeat(uri, __interval)
+      this._repeat(__interval, uri, option)
     } else {
-      this._fetch(uri)
+      this._fetch(uri, option)
     }
 
     return this;
@@ -98,11 +98,12 @@ export default class Zombee {
     return this;
   }
 
-  _repeat(uri, interval) {
+  _repeat(interval, uri, option) {
     this.bee = setInterval(
       this._fetch.bind(this),
       interval,
-      uri
+      uri,
+      option
     )
 
     return this;
